@@ -1,0 +1,86 @@
+@import "tailwindcss";
+
+@theme {
+    /* ---- Paddy palette -----------------------------------------------
+     Grounded in the rice field itself: husk gold, paddy green, wet-soil
+     ink, and the pale green-cream of young leaves catching light.
+     Deliberately not the cream/terracotta or near-black/acid-green
+     combinations that show up by default -- this stays inside a single
+     green family with one warm gold accent, because the product lives
+     and dies by "can a farmer read this in bright sun".
+  --------------------------------------------------------------------*/
+    --color-paddy-50: #f4f7ee;
+    --color-paddy-100: #e7edda;
+    --color-paddy-200: #d6e0c4;
+    --color-husk-100: #f3e6c4;
+    --color-husk-400: #dcae3f;
+    --color-husk-500: #c9982e;
+    --color-husk-600: #a67a21;
+    --color-leaf-400: #4f8a5f;
+    --color-leaf-500: #3f6b4a;
+    --color-leaf-600: #2c5138;
+    --color-leaf-700: #1f3a2a;
+    --color-leaf-900: #142a1c;
+    --color-ink-900: #1c2318;
+    --color-ink-600: #4d5945;
+    --color-ink-400: #7c8a71;
+    --color-rust-500: #b3462c;
+    --color-rust-100: #f7e0d8;
+    --color-paper: #ffffff;
+
+    --font-display: "Fraunces", "Iowan Old Style", Georgia, serif;
+    --font-sans:
+        "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    --font-mono: "JetBrains Mono", ui-monospace, SFMono-Regular, monospace;
+}
+
+@layer base {
+    html {
+        -webkit-tap-highlight-color: transparent;
+    }
+    body {
+        background: var(--color-paddy-50);
+        color: var(--color-ink-900);
+        font-family: var(--font-sans);
+    }
+    :focus-visible {
+        outline: 2px solid var(--color-husk-500);
+        outline-offset: 2px;
+    }
+}
+
+@layer utilities {
+    /* Signature texture: faint paddy rows, used behind the uploader/hero. */
+    .paddy-rows {
+        background-image: repeating-linear-gradient(
+            180deg,
+            rgba(63, 107, 74, 0.07) 0px,
+            rgba(63, 107, 74, 0.07) 1px,
+            transparent 1px,
+            transparent 22px
+        );
+    }
+    .grain-shell {
+        border-radius: 60% 60% 55% 55% / 65% 65% 45% 45%;
+    }
+    .scrollbar-thin::-webkit-scrollbar {
+        width: 6px;
+        height: 6px;
+    }
+    .scrollbar-thin::-webkit-scrollbar-thumb {
+        background: var(--color-paddy-200);
+        border-radius: 999px;
+    }
+}
+
+@keyframes scan {
+    0% {
+        top: 2%;
+    }
+    100% {
+        top: 98%;
+    }
+}
+.animate-scan {
+    animation: scan 1.8s linear infinite;
+}

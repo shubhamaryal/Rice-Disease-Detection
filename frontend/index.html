@@ -1,89 +1,21 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
 
 <head>
   <meta charset="UTF-8" />
+  <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>RiceDiseaseNet-BIO — Leaf Disease Scanner</title>
-  <link rel="stylesheet" href="index.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link
+    href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600;9..144,700&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap"
+    rel="stylesheet" />
 </head>
 
 <body>
-
-  <header>
-    <div class="inner">
-      <div class="eyebrow">Rice Leaf Disease Scanner</div>
-      <h1>RiceDiseaseNet-BIO</h1>
-      <p>Upload a photo of a rice leaf and the model will identify the likely disease, show its confidence, and
-        highlight — via Grad-CAM — exactly which part of the leaf it looked at.</p>
-    </div>
-  </header>
-
-  <main>
-    <section class="panel">
-      <div class="upload-grid">
-        <div id="dropzone">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6">
-            <path d="M12 16V4M12 4l-4 4M12 4l4 4" stroke-linecap="round" stroke-linejoin="round" />
-            <path d="M4 16v3a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-3" stroke-linecap="round" stroke-linejoin="round" />
-          </svg>
-          <div class="primary-text">Drop a leaf photo here, or click to browse</div>
-          <div class="secondary-text">JPG or PNG · one leaf per photo works best</div>
-          <input type="file" id="fileInput" accept="image/*" />
-        </div>
-
-        <div class="preview-wrap" id="previewWrap">
-          <div class="preview-placeholder" id="previewPlaceholder">No image selected yet</div>
-          <img id="previewImg" style="display:none" alt="Preview of uploaded leaf" />
-          <div class="scanline"></div>
-        </div>
-      </div>
-
-      <div class="actions">
-        <button id="analyzeBtn" disabled>Analyze leaf</button>
-        <button id="resetBtn" style="display:none">Start over</button>
-        <span class="status-text" id="statusText"></span>
-      </div>
-
-      <div id="errorBox"></div>
-    </section>
-
-    <section id="results" class="panel">
-      <div class="results-grid">
-        <div class="result-image-card">
-          <div class="toggle-row">
-            <button id="showOverlayBtn" class="active">Grad-CAM overlay</button>
-            <button id="showHeatmapBtn">Raw heatmap</button>
-          </div>
-          <figure>
-            <img id="gradcamImg" alt="Grad-CAM visualization" />
-            <figcaption>Brighter regions influenced the prediction most</figcaption>
-          </figure>
-        </div>
-
-        <div class="diagnosis-card">
-          <div class="eyebrow-2">Predicted condition</div>
-          <div class="diagnosis-name" id="diagnosisName">—</div>
-
-          <div class="confidence-row">
-            <div class="confidence-track">
-              <div class="confidence-fill" id="confidenceFill" style="width:0%"></div>
-            </div>
-            <div class="confidence-label" id="confidenceLabel">0%</div>
-          </div>
-
-          <div class="advisory" id="advisoryText"></div>
-
-          <div class="eyebrow-2" style="margin-bottom:0.5rem;">Full breakdown</div>
-          <ul class="prob-list" id="probList"></ul>
-        </div>
-      </div>
-    </section>
-  </main>
-
-  <footer>RiceDiseaseNet-BIO · built for offline/local or cloud deployment</footer>
-
-  <script src="script.js"></script>
+  <div id="root"></div>
+  <script type="module" src="/src/main.jsx"></script>
 </body>
 
 </html>
