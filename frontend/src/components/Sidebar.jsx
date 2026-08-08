@@ -16,10 +16,7 @@ export default function Sidebar() {
                 </div>
                 <div>
                     <div className="font-display font-semibold text-lg leading-none">
-                        RiceDiseaseNet
-                    </div>
-                    <div className="font-mono text-[10px] tracking-[0.14em] uppercase text-husk-100/80 mt-1">
-                        BIO Field Edition
+                        Rice Disease Detection
                     </div>
                 </div>
             </div>

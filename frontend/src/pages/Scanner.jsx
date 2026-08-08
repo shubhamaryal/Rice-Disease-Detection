@@ -1,5 +1,5 @@
 import { useCallback, useRef, useState } from "react";
-import { UploadCloud, Camera, RotateCcw, AlertTriangle } from "lucide-react";
+import { UploadCloud, Camera, RotateCcw, AlertTriangle, ChevronDown, ChevronUp } from "lucide-react";
 import { predictLeaf } from "../api/predict";
 import GrainMeter from "../components/GrainMeter";
 
@@ -15,6 +15,7 @@ export default function Scanner() {
     const [result, setResult] = useState(null);
     const [activeImage, setActiveImage] = useState("overlay"); // overlay | heatmap
     const [dragOver, setDragOver] = useState(false);
+    const [showDetails, setShowDetails] = useState(false);
 
     const fileInputRef = useRef(null);
     const cameraInputRef = useRef(null);
@@ -29,6 +30,7 @@ export default function Scanner() {
         setFile(f);
         setPreviewUrl(URL.createObjectURL(f));
         setResult(null);
+        setShowDetails(false);
         setStatus("idle");
     }, []);
 
@@ -42,6 +44,7 @@ export default function Scanner() {
         setFile(null);
         setPreviewUrl(null);
         setResult(null);
+        setShowDetails(false);
         setStatus("idle");
         setError("");
         if (fileInputRef.current) fileInputRef.current.value = "";
@@ -52,14 +55,21 @@ export default function Scanner() {
         if (!file) return;
         setStatus("analyzing");
         setError("");
+        setShowDetails(false);
         try {
             const data = await predictLeaf(file);
             setResult(data);
             setActiveImage("overlay");
             setStatus("done");
         } catch (err) {
+            // A 422 means the backend understood the request just fine and
+            // deliberately rejected the image (e.g. it doesn't look like a
+            // rice leaf) -- show that message as-is instead of implying the
+            // backend is down.
             setError(
-                `Could not analyze this image: ${err.message}. Is the backend running?`,
+                err.status === 422
+                    ? err.message
+                    : `Could not analyze this image: ${err.message}. Is the backend running?`,
             );
             setStatus("idle");
         }
@@ -102,7 +112,7 @@ export default function Scanner() {
                             dragOver
                                 ? "border-husk-500 bg-husk-100/40"
                                 : "border-leaf-500/50"
-                        } min-h-[240px] flex flex-col items-center justify-center gap-3 p-6 text-center transition-colors`}
+                        } h-60 sm:h-72 flex flex-col items-center justify-center gap-3 p-6 text-center transition-colors`}
                     >
                         <div className="bg-leaf-500/10 text-leaf-600 rounded-full p-3">
                             <UploadCloud size={28} strokeWidth={1.8} />
@@ -151,12 +161,12 @@ export default function Scanner() {
                     </div>
 
                     {/* Preview */}
-                    <div className="relative rounded-2xl overflow-hidden bg-leaf-900 min-h-[240px] flex items-center justify-center">
+                    <div className="relative rounded-2xl overflow-hidden bg-leaf-900 h-60 sm:h-72 flex items-center justify-center">
                         {previewUrl ? (
                             <img
                                 src={previewUrl}
                                 alt="Selected leaf preview"
-                                className="w-full h-full object-contain"
+                                className="max-w-full max-h-full object-contain"
                             />
                         ) : (
                             <p className="font-mono text-sm text-paddy-100/70 px-6 text-center">
@@ -188,11 +198,6 @@ export default function Scanner() {
                             Start over
                         </button>
                     )}
-                    {status === "done" && (
-                        <span className="font-mono text-xs text-ink-600">
-                            Done
-                        </span>
-                    )}
                 </div>
 
                 {error && (
@@ -204,102 +209,140 @@ export default function Scanner() {
             </section>
 
             {result && (
-                <section className="mt-8 grid md:grid-cols-2 gap-6">
-                    <div className="bg-paper border border-paddy-200 rounded-2xl p-4 sm:p-5">
-                        <div className="flex justify-center gap-2 mb-3">
-                            <button
-                                onClick={() => setActiveImage("overlay")}
-                                className={`text-xs font-semibold px-3 py-1.5 rounded-full transition-colors ${
-                                    activeImage === "overlay"
-                                        ? "bg-leaf-500 text-white"
-                                        : "bg-paddy-100 text-leaf-700"
-                                }`}
-                            >
-                                Grad-CAM overlay
-                            </button>
-                            <button
-                                onClick={() => setActiveImage("heatmap")}
-                                className={`text-xs font-semibold px-3 py-1.5 rounded-full transition-colors ${
-                                    activeImage === "heatmap"
-                                        ? "bg-leaf-500 text-white"
-                                        : "bg-paddy-100 text-leaf-700"
-                                }`}
-                            >
-                                Raw heatmap
-                            </button>
-                        </div>
-                        <figure>
-                            <img
-                                src={
-                                    activeImage === "overlay"
-                                        ? result.gradcam_image
-                                        : result.heatmap_image
-                                }
-                                alt="Grad-CAM visualization"
-                                className="w-full rounded-xl border border-paddy-200"
-                            />
-                            <figcaption className="font-mono text-[11px] uppercase tracking-wide text-ink-600 text-center mt-2">
-                                Brighter regions influenced the prediction most
-                            </figcaption>
-                        </figure>
-                    </div>
-
-                    <div className="bg-paper border border-paddy-200 rounded-2xl p-5 sm:p-6">
+                <section className="mt-8">
+                    <div className="bg-paper border border-paddy-200 rounded-2xl p-5 sm:p-6 text-center">
                         <div className="font-mono text-xs uppercase tracking-wide text-ink-600">
                             Predicted condition
                         </div>
-                        <div className="font-display font-semibold text-2xl sm:text-3xl text-leaf-900 mt-1 mb-4 capitalize">
+                        <div className="font-display font-semibold text-2xl sm:text-3xl text-leaf-900 mt-1 capitalize">
                             {formatLabel(result.predicted_class)}
                         </div>
+                        <button
+                            type="button"
+                            onClick={() => setShowDetails((v) => !v)}
+                            className="mt-4 inline-flex items-center gap-1.5 rounded-full border border-paddy-200 text-leaf-700 text-sm font-semibold px-4 py-2 hover:bg-paddy-50 transition-colors"
+                        >
+                            {showDetails ? (
+                                <>
+                                    See less
+                                    <ChevronUp size={15} />
+                                </>
+                            ) : (
+                                <>
+                                    See more
+                                    <ChevronDown size={15} />
+                                </>
+                            )}
+                        </button>
+                    </div>
 
-                        <div className="flex items-center gap-3 mb-5">
-                            <GrainMeter
-                                value={Math.round(result.confidence * 100)}
-                                size="lg"
-                                tone={riskTone}
-                            />
-                            <span className="font-mono text-sm font-semibold">
-                                {Math.round(result.confidence * 100)}%
-                            </span>
-                        </div>
-
-                        <div className="bg-husk-100 text-leaf-900 rounded-xl px-4 py-3 text-sm mb-5">
-                            {result.advisory}
-                        </div>
-
-                        <div className="font-mono text-xs uppercase tracking-wide text-ink-600 mb-2">
-                            Full breakdown
-                        </div>
-                        <ul className="space-y-2">
-                            {result.probabilities.map((p, i) => (
-                                <li
-                                    key={p.class_name}
-                                    className="flex items-center gap-3 text-sm"
-                                >
-                                    <span
-                                        className={`w-36 shrink-0 truncate capitalize ${
-                                            i === 0
-                                                ? "text-leaf-900 font-semibold"
-                                                : "text-ink-600"
+                    {showDetails && (
+                        <div className="mt-6 grid md:grid-cols-2 gap-6">
+                            <div className="bg-paper border border-paddy-200 rounded-2xl p-4 sm:p-5">
+                                <div className="flex justify-center gap-2 mb-3">
+                                    <button
+                                        onClick={() => setActiveImage("overlay")}
+                                        className={`text-xs font-semibold px-3 py-1.5 rounded-full transition-colors ${
+                                            activeImage === "overlay"
+                                                ? "bg-leaf-500 text-white"
+                                                : "bg-paddy-100 text-leaf-700"
                                         }`}
                                     >
-                                        {formatLabel(p.class_name)}
+                                        Grad-CAM overlay
+                                    </button>
+                                    <button
+                                        onClick={() => setActiveImage("heatmap")}
+                                        className={`text-xs font-semibold px-3 py-1.5 rounded-full transition-colors ${
+                                            activeImage === "heatmap"
+                                                ? "bg-leaf-500 text-white"
+                                                : "bg-paddy-100 text-leaf-700"
+                                        }`}
+                                    >
+                                        Raw heatmap
+                                    </button>
+                                </div>
+                                <figure>
+                                    <img
+                                        src={
+                                            activeImage === "overlay"
+                                                ? result.gradcam_image
+                                                : result.heatmap_image
+                                        }
+                                        alt="Grad-CAM visualization"
+                                        className="w-full rounded-xl border border-paddy-200"
+                                    />
+                                    <figcaption className="font-mono text-[11px] uppercase tracking-wide text-ink-600 text-center mt-2">
+                                        Brighter regions influenced the prediction most
+                                    </figcaption>
+                                </figure>
+                            </div>
+
+                            <div className="bg-paper border border-paddy-200 rounded-2xl p-5 sm:p-6">
+                                <div className="font-mono text-xs uppercase tracking-wide text-ink-600">
+                                    Confidence
+                                </div>
+                                <div className="flex items-center gap-3 mt-2 mb-5">
+                                    <GrainMeter
+                                        value={Math.round(result.confidence * 100)}
+                                        size="lg"
+                                        tone={riskTone}
+                                    />
+                                    <span className="font-mono text-sm font-semibold">
+                                        {Math.round(result.confidence * 100)}%
                                     </span>
-                                    <span className="flex-1 h-1.5 rounded-full bg-paddy-200 overflow-hidden">
-                                        <span
-                                            className={`block h-full rounded-full ${i === 0 ? "bg-husk-500" : "bg-leaf-500"}`}
-                                            style={{
-                                                width: `${Math.round(p.probability * 100)}%`,
-                                            }}
-                                        />
-                                    </span>
-                                    <span className="w-12 text-right font-mono text-xs">
-                                        {Math.round(p.probability * 100)}%
-                                    </span>
-                                </li>
-                            ))}
-                        </ul>
-                    </div>
+                                </div>
+
+                                {result.low_confidence && (
+                                    <div className="flex items-start gap-2 rounded-xl bg-rust-100 text-rust-500 px-4 py-3 text-sm mb-3">
+                                        <AlertTriangle size={16} className="mt-0.5 shrink-0" />
+                                        <span>
+                                            The model isn't very confident about this
+                                            one — the photo may be unclear, or it
+                                            might not be a rice leaf at all. Treat
+                                            this result as a rough guess.
+                                        </span>
+                                    </div>
+                                )}
+
+                                <div className="bg-husk-100 text-leaf-900 rounded-xl px-4 py-3 text-sm mb-5">
+                                    {result.advisory}
+                                </div>
+
+                                <div className="font-mono text-xs uppercase tracking-wide text-ink-600 mb-2">
+                                    Full breakdown
+                                </div>
+                                <ul className="space-y-2">
+                                    {result.probabilities.map((p, i) => (
+                                        <li
+                                            key={p.class_name}
+                                            className="flex items-center gap-3 text-sm"
+                                        >
+                                            <span
+                                                className={`w-36 shrink-0 truncate capitalize ${
+                                                    i === 0
+                                                        ? "text-leaf-900 font-semibold"
+                                                        : "text-ink-600"
+                                                }`}
+                                            >
+                                                {formatLabel(p.class_name)}
+                                            </span>
+                                            <span className="flex-1 h-1.5 rounded-full bg-paddy-200 overflow-hidden">
+                                                <span
+                                                    className={`block h-full rounded-full ${i === 0 ? "bg-husk-500" : "bg-leaf-500"}`}
+                                                    style={{
+                                                        width: `${Math.round(p.probability * 100)}%`,
+                                                    }}
+                                                />
+                                            </span>
+                                            <span className="w-12 text-right font-mono text-xs">
+                                                {Math.round(p.probability * 100)}%
+                                            </span>
+                                        </li>
+                                    ))}
+                                </ul>
+                            </div>
+                        </div>
+                    )}
                 </section>
             )}
         </div>

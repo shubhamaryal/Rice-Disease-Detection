@@ -43,7 +43,7 @@ function DiseaseDetail({ disease, onBack }) {
         <div>
             <button
                 onClick={onBack}
-                className="inline-flex items-center gap-1.5 text-sm font-medium text-leaf-700 hover:text-leaf-900 mb-6"
+                className="inline-flex items-center gap-1.5 text-sm font-medium text-leaf-700 hover:text-leaf-900 mb-6 cursor-pointer translate-all"
             >
                 <ArrowLeft size={16} /> Back to library
             </button>

@@ -20,7 +20,10 @@ export async function predictLeaf(file) {
 
     if (!res.ok) {
         const err = await res.json().catch(() => ({}));
-        throw new Error(err.detail || `Server error (${res.status})`);
+        const message = err.detail || `Server error (${res.status})`;
+        const error = new Error(message);
+        error.status = res.status;
+        throw error;
     }
 
     return res.json();

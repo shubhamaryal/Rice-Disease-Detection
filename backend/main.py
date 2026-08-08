@@ -86,6 +86,47 @@ def get_advisory(class_name: str) -> str:
             return text
     return "Consult a local agricultural expert to confirm this diagnosis and get treatment guidance."
 
+
+# ----------------------------------------------------------------------
+# Out-of-distribution guard
+# ----------------------------------------------------------------------
+# The model was trained ONLY on 8 rice-leaf classes. It has no concept of
+# "not a leaf" -- softmax always sums to 1, so it will confidently pick
+# one of the 8 classes for literally any image (a plate of momo, a pizza,
+# a selfie, ...). This is the actual cause of the "predicts a disease for
+# a random photo" behaviour reported -- it isn't specific to the old vs.
+# new weights, it's inherent to any closed-set classifier with no
+# rejection/background class, so it will keep happening even after
+# retraining unless the model gains a way to say "none of the above".
+#
+# The proper long-term fix is to train the model with an explicit
+# "not_a_leaf" / background class using a variety of non-leaf images.
+# As a lightweight guard that doesn't require retraining, we do a cheap
+# color-based sanity check before running the model: rice leaves are
+# green-dominant even when diseased, so a photo with almost no green
+# content (food, people, random objects, screenshots, etc.) is rejected
+# up front. We also flag predictions where the model itself isn't
+# confident, in case something green-ish but not a leaf slips through.
+MIN_GREEN_RATIO = 0.04          # reject if less than 4% of pixels look plant-green
+LOW_CONFIDENCE_THRESHOLD = 0.45  # warn (but still show) if softmax confidence is low
+
+
+def green_pixel_ratio(img: Image.Image, sample_size: int = 64) -> float:
+    """Fraction of pixels that fall in a plant/leaf-like green hue range."""
+    small = img.convert("RGB").resize((sample_size, sample_size))
+    arr = np.asarray(small).astype(np.float32) / 255.0
+    r, g, b = arr[..., 0], arr[..., 1], arr[..., 2]
+    maxc, minc = arr.max(axis=-1), arr.min(axis=-1)
+    delta = maxc - minc
+    delta_safe = np.where(delta == 0, 1, delta)
+    hr = ((g - b) / delta_safe) % 6
+    hg = ((b - r) / delta_safe) + 2
+    hb = ((r - g) / delta_safe) + 4
+    hue = (np.select([maxc == r, maxc == g, maxc == b], [hr, hg, hb]) * 60) % 360
+    sat = np.where(maxc == 0, 0, delta / np.where(maxc == 0, 1, maxc))
+    green_mask = (hue >= 70) & (hue <= 170) & (sat > 0.15) & (maxc > 0.08)
+    return float(green_mask.mean())
+
 # ----------------------------------------------------------------------
 # Model
 # ----------------------------------------------------------------------
@@ -146,6 +187,7 @@ class PredictionResponse(BaseModel):
     probabilities: list[ClassProbability]
     gradcam_image: str  # base64 PNG data URI (overlay)
     heatmap_image: str  # base64 PNG data URI (raw attention heatmap)
+    low_confidence: bool = False  # true if the model itself wasn't sure
 
 
 @app.get("/api/health")
@@ -168,6 +210,16 @@ async def predict(file: UploadFile = File(...)):
         img = Image.open(io.BytesIO(raw_bytes)).convert("RGB")
     except Exception:
         raise HTTPException(status_code=400, detail="Could not read this file as an image.")
+
+    if green_pixel_ratio(img) < MIN_GREEN_RATIO:
+        raise HTTPException(
+            status_code=422,
+            detail=(
+                "This doesn't look like a rice leaf photo. The model only "
+                "recognizes rice-leaf diseases, so please upload a clear, "
+                "close-up photo of a single leaf."
+            ),
+        )
 
     inp = eval_transform(img).unsqueeze(0).to(DEVICE)
 
@@ -200,6 +252,7 @@ async def predict(file: UploadFile = File(...)):
         probabilities=probabilities,
         gradcam_image=image_to_base64_png(overlay),
         heatmap_image=image_to_base64_png(heatmap_rgb),
+        low_confidence=confidence < LOW_CONFIDENCE_THRESHOLD,
     )
 
 
