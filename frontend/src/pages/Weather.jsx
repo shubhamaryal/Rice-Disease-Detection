@@ -7,6 +7,7 @@ import {
     describeCode,
 } from "../api/weather";
 import WeatherIcon from "../components/WeatherIcon";
+import { useLanguage } from "../i18n";
 
 const DEFAULT_LOCATION = {
     name: "Kathmandu",
@@ -14,31 +15,34 @@ const DEFAULT_LOCATION = {
     longitude: 85.324,
 };
 
-function dayLabel(dateStr, index) {
+function dayLabel(dateStr, index, language) {
     if (index === 0) return "Today";
     const d = new Date(dateStr);
-    return d.toLocaleDateString(undefined, { weekday: "short" });
+    return d.toLocaleDateString(language === "ne" ? "ne-NP" : undefined, {
+        weekday: "short",
+    });
 }
 
 // A rough, transparent heuristic -- not agronomic advice from a model,
 // just plain rules a field advisor would apply from the same numbers.
-function fieldAdvisory(day) {
+function fieldAdvisory(day, t) {
     if (day.precipitation_probability_max >= 60) {
-        return { label: "Hold off spraying", tone: "rust" };
+        return { label: t("weather.holdOffSpraying"), tone: "rust" };
     }
     if (day.relative_humidity_2m_max >= 85) {
-        return { label: "High blast/blight risk", tone: "husk" };
+        return { label: t("weather.highRisk"), tone: "husk" };
     }
     if (
         day.precipitation_probability_max <= 20 &&
         day.wind_speed_10m_max < 20
     ) {
-        return { label: "Good for harvest work", tone: "leaf" };
+        return { label: t("weather.goodForHarvest"), tone: "leaf" };
     }
-    return { label: "Normal field conditions", tone: "leaf" };
+    return { label: t("weather.normalConditions"), tone: "leaf" };
 }
 
 export default function Weather() {
+    const { language, t } = useLanguage();
     const [location, setLocation] = useState(null);
     const [forecast, setForecast] = useState(null);
     const [loading, setLoading] = useState(true);
@@ -57,7 +61,7 @@ export default function Weather() {
                 const { latitude, longitude } = pos.coords;
                 const name =
                     (await reverseGeocode(latitude, longitude)) ||
-                    "Your location";
+                    t("weather.yourLocation");
                 setLocation({ name, latitude, longitude });
             },
             () => setLocation(DEFAULT_LOCATION),
@@ -113,15 +117,16 @@ export default function Weather() {
             <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-4 mb-8">
                 <div>
                     <div className="font-mono text-xs tracking-[0.14em] uppercase text-leaf-600">
-                        7-Day Forecast
+                        {t("weather.kicker")}
                     </div>
                     <h1 className="font-display font-semibold text-3xl sm:text-4xl text-leaf-900 mt-1 flex items-center gap-2">
                         <MapPin size={26} className="text-husk-500" />
-                        {location?.name || "Locating…"}
+                        {location?.name || t("weather.locating")}
                     </h1>
                     <p className="text-ink-600 mt-2 max-w-xl">
-                        Plan spraying, drainage and harvest days around the week
-                        ahead.
+                        {language === "ne"
+                            ? "आगामी हप्तालाई ध्यानमा राखेर छर्कने, पानी निकास गर्ने र कटानी गर्ने दिन योजना गर्नुहोस्।"
+                            : "Plan spraying, drainage and harvest days around the week ahead."}
                     </p>
                 </div>
 
@@ -131,7 +136,7 @@ export default function Weather() {
                         <input
                             value={query}
                             onChange={(e) => runSearch(e.target.value)}
-                            placeholder="Search a district or city"
+                            placeholder={t("weather.search")}
                             className="flex-1 bg-transparent text-sm outline-none placeholder:text-ink-400"
                         />
                         {searching && (
@@ -170,8 +175,7 @@ export default function Weather() {
 
             {loading && (
                 <div className="flex items-center gap-2 text-ink-600 font-mono text-sm">
-                    <Loader2 size={16} className="animate-spin" /> Loading
-                    forecast…
+                    <Loader2 size={16} className="animate-spin" /> {t("weather.loading")}
                 </div>
             )}
 
@@ -187,20 +191,19 @@ export default function Weather() {
                                 {Math.round(current.temperature_2m)}°C
                             </div>
                             <div className="text-paddy-100 text-sm mt-1">
-                                {describeCode(current.weather_code).label} ·
-                                Feels {Math.round(current.apparent_temperature)}
-                                °C
+                                {describeCode(current.weather_code, language).label} ·{" "}
+                                {t("weather.feels")} {Math.round(current.apparent_temperature)}°C
                             </div>
                         </div>
                     </div>
                     <div className="flex gap-6 text-sm">
                         <div className="flex items-center gap-1.5">
                             <Droplets size={16} className="text-husk-400" />
-                            {current.relative_humidity_2m}% humidity
+                            {current.relative_humidity_2m}% {t("weather.humidity")}
                         </div>
                         <div className="flex items-center gap-1.5">
                             <Wind size={16} className="text-husk-400" />
-                            {Math.round(current.wind_speed_10m)} km/h
+                            {Math.round(current.wind_speed_10m)} {t("weather.wind")}
                         </div>
                     </div>
                 </div>
@@ -209,13 +212,16 @@ export default function Weather() {
             {!loading && daily && (
                 <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
                     {daily.time.map((date, i) => {
-                        const advisory = fieldAdvisory({
-                            precipitation_probability_max:
-                                daily.precipitation_probability_max[i],
-                            relative_humidity_2m_max:
-                                daily.relative_humidity_2m_max[i],
-                            wind_speed_10m_max: daily.wind_speed_10m_max[i],
-                        });
+                        const advisory = fieldAdvisory(
+                            {
+                                precipitation_probability_max:
+                                    daily.precipitation_probability_max[i],
+                                relative_humidity_2m_max:
+                                    daily.relative_humidity_2m_max[i],
+                                wind_speed_10m_max: daily.wind_speed_10m_max[i],
+                            },
+                            t,
+                        );
                         const toneClasses =
                             advisory.tone === "rust"
                                 ? "bg-rust-100 text-rust-500"
@@ -228,17 +234,18 @@ export default function Weather() {
                                 className="bg-paper border border-paddy-200 rounded-2xl p-4 flex flex-col gap-2"
                             >
                                 <div className="font-semibold text-ink-900">
-                                    {dayLabel(date, i)}
+                                    {i === 0
+                                        ? t("weather.today")
+                                        : dayLabel(date, i, language)}
                                 </div>
                                 <WeatherIcon
                                     bucket={
-                                        describeCode(daily.weather_code[i])
-                                            .bucket
+                                        describeCode(daily.weather_code[i], language).bucket
                                     }
                                     size={30}
                                 />
                                 <div className="text-sm text-ink-600">
-                                    {describeCode(daily.weather_code[i]).label}
+                                    {describeCode(daily.weather_code[i], language).label}
                                 </div>
                                 <div className="font-mono text-sm">
                                     <span className="font-semibold text-leaf-900">
@@ -255,9 +262,7 @@ export default function Weather() {
                                     </span>
                                 </div>
                                 <div className="flex items-center gap-1 text-xs text-ink-600">
-                                    <Droplets size={13} />
-                                    {daily.precipitation_probability_max[i]}%
-                                    rain
+                                    {daily.precipitation_probability_max[i]}% {t("weather.rain")}
                                 </div>
                                 <span
                                     className={`mt-1 self-start text-[11px] font-medium px-2 py-1 rounded-full ${toneClasses}`}
@@ -271,9 +276,9 @@ export default function Weather() {
             )}
 
             <p className="font-mono text-[11px] text-ink-400 mt-8">
-                Forecast data: Open-Meteo. Field advisories are simple rules of
-                thumb from the numbers above -- always confirm with a local
-                agronomist before a big spray or harvest decision.
+                {language === "ne"
+                    ? "पूर्वानुमान डेटा: Open-Meteo। माथिका संख्याबाट तयार गरिएको खेत सल्लाह साधारण नियमहरू हुन् — कुनै ठूलो छर्काइ वा कटानी निर्णय अघि स्थानीय कृषि प्राविधिकसँग पुष्टि गर्नुहोस्।"
+                    : "Forecast data: Open-Meteo. Field advisories are simple rules of thumb from the numbers above -- always confirm with a local agronomist before a big spray or harvest decision."}
             </p>
         </div>
     );

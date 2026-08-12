@@ -2,12 +2,14 @@ import { useCallback, useRef, useState } from "react";
 import { UploadCloud, Camera, RotateCcw, AlertTriangle, ChevronDown, ChevronUp } from "lucide-react";
 import { predictLeaf } from "../api/predict";
 import GrainMeter from "../components/GrainMeter";
+import { useLanguage } from "../i18n";
 
 function formatLabel(name) {
     return name.replace(/_/g, " ");
 }
 
 export default function Scanner() {
+    const { t } = useLanguage();
     const [file, setFile] = useState(null);
     const [previewUrl, setPreviewUrl] = useState(null);
     const [status, setStatus] = useState("idle"); // idle | analyzing | done
@@ -23,7 +25,7 @@ export default function Scanner() {
     const handleFile = useCallback((f) => {
         if (!f) return;
         if (!f.type.startsWith("image/")) {
-            setError("Please choose an image file (JPG or PNG).");
+            setError(t("scanner.selectImage"));
             return;
         }
         setError("");
@@ -69,7 +71,7 @@ export default function Scanner() {
             setError(
                 err.status === 422
                     ? err.message
-                    : `Could not analyze this image: ${err.message}. Is the backend running?`,
+                    : t("scanner.analysisFailed", { message: err.message }),
             );
             setStatus("idle");
         }
@@ -86,15 +88,13 @@ export default function Scanner() {
         <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-10 py-8 sm:py-10">
             <div className="mb-8">
                 <div className="font-mono text-xs tracking-[0.14em] uppercase text-leaf-600">
-                    AI Diagnostic Tool
+                    {t("scanner.kicker")}
                 </div>
                 <h1 className="font-display font-semibold text-3xl sm:text-4xl text-leaf-900 mt-1">
-                    Scan a rice leaf
+                    {t("scanner.title")}
                 </h1>
                 <p className="text-ink-600 mt-2 max-w-2xl">
-                    Upload or photograph a single leaf and the model identifies
-                    the likely disease, its confidence, and — via Grad-CAM —
-                    exactly which part of the leaf it looked at.
+                    {t("scanner.description")}
                 </p>
             </div>
 
@@ -119,10 +119,10 @@ export default function Scanner() {
                         </div>
                         <div>
                             <p className="font-semibold text-ink-900">
-                                Drop a leaf photo here
+                                {t("scanner.dropTitle")}
                             </p>
                             <p className="text-sm text-ink-600 mt-0.5">
-                                or choose one of the options below · JPG or PNG
+                                {t("scanner.dropSubtitle")}
                             </p>
                         </div>
                         <div className="flex flex-wrap items-center justify-center gap-2 mt-1">
@@ -131,7 +131,7 @@ export default function Scanner() {
                                 onClick={() => fileInputRef.current?.click()}
                                 className="rounded-full bg-leaf-500 hover:bg-leaf-600 text-white text-sm font-semibold px-4 py-2 transition-colors"
                             >
-                                Browse files
+                                {t("scanner.browse")}
                             </button>
                             <button
                                 type="button"
@@ -139,7 +139,7 @@ export default function Scanner() {
                                 className="inline-flex items-center gap-1.5 rounded-full bg-husk-500 hover:bg-husk-600 text-leaf-900 text-sm font-semibold px-4 py-2 transition-colors"
                             >
                                 <Camera size={16} strokeWidth={2.2} />
-                                Take photo
+                                {t("scanner.takePhoto")}
                             </button>
                         </div>
                         <input
@@ -165,16 +165,16 @@ export default function Scanner() {
                         {previewUrl ? (
                             <img
                                 src={previewUrl}
-                                alt="Selected leaf preview"
+                                alt={t("scanner.title")}
                                 className="max-w-full max-h-full object-contain"
                             />
                         ) : (
                             <p className="font-mono text-sm text-paddy-100/70 px-6 text-center">
-                                No image selected yet
+                                {t("scanner.noImage")}
                             </p>
                         )}
                         {status === "analyzing" && (
-                            <span className="absolute left-0 right-0 h-0.5 bg-gradient-to-r from-transparent via-husk-400 to-transparent shadow-[0_0_12px_2px_rgba(201,152,46,0.7)] animate-scan" />
+                            <span className="absolute left-0 right-0 h-0.5 bg-linear-to-r from-transparent via-husk-400 to-transparent shadow-[0_0_12px_2px_rgba(201,152,46,0.7)] animate-scan" />
                         )}
                     </div>
                 </div>
@@ -186,7 +186,7 @@ export default function Scanner() {
                         onClick={analyze}
                         className="rounded-full bg-leaf-600 hover:bg-leaf-700 disabled:opacity-40 disabled:cursor-not-allowed text-white text-sm font-semibold px-6 py-2.5 transition-colors"
                     >
-                        {status === "analyzing" ? "Analyzing…" : "Analyze leaf"}
+                        {status === "analyzing" ? t("scanner.analyzing") : t("scanner.analyze")}
                     </button>
                     {file && (
                         <button
@@ -195,7 +195,7 @@ export default function Scanner() {
                             className="inline-flex items-center gap-1.5 rounded-full border border-paddy-200 text-ink-600 text-sm font-medium px-4 py-2.5 hover:bg-paddy-50 transition-colors"
                         >
                             <RotateCcw size={15} />
-                            Start over
+                            {t("scanner.startOver")}
                         </button>
                     )}
                 </div>
@@ -212,7 +212,7 @@ export default function Scanner() {
                 <section className="mt-8">
                     <div className="bg-paper border border-paddy-200 rounded-2xl p-5 sm:p-6 text-center">
                         <div className="font-mono text-xs uppercase tracking-wide text-ink-600">
-                            Predicted condition
+                            {t("scanner.predictedCondition")}
                         </div>
                         <div className="font-display font-semibold text-2xl sm:text-3xl text-leaf-900 mt-1 capitalize">
                             {formatLabel(result.predicted_class)}
@@ -224,12 +224,12 @@ export default function Scanner() {
                         >
                             {showDetails ? (
                                 <>
-                                    See less
+                                    {t("scanner.seeLess")}
                                     <ChevronUp size={15} />
                                 </>
                             ) : (
                                 <>
-                                    See more
+                                    {t("scanner.seeMore")}
                                     <ChevronDown size={15} />
                                 </>
                             )}
@@ -248,7 +248,7 @@ export default function Scanner() {
                                                 : "bg-paddy-100 text-leaf-700"
                                         }`}
                                     >
-                                        Grad-CAM overlay
+                                        {t("scanner.overlay")}
                                     </button>
                                     <button
                                         onClick={() => setActiveImage("heatmap")}
@@ -258,7 +258,7 @@ export default function Scanner() {
                                                 : "bg-paddy-100 text-leaf-700"
                                         }`}
                                     >
-                                        Raw heatmap
+                                        {t("scanner.heatmap")}
                                     </button>
                                 </div>
                                 <figure>
@@ -272,14 +272,14 @@ export default function Scanner() {
                                         className="w-full rounded-xl border border-paddy-200"
                                     />
                                     <figcaption className="font-mono text-[11px] uppercase tracking-wide text-ink-600 text-center mt-2">
-                                        Brighter regions influenced the prediction most
+                                        {t("scanner.heatmapCaption")}
                                     </figcaption>
                                 </figure>
                             </div>
 
                             <div className="bg-paper border border-paddy-200 rounded-2xl p-5 sm:p-6">
                                 <div className="font-mono text-xs uppercase tracking-wide text-ink-600">
-                                    Confidence
+                                    {t("scanner.confidence")}
                                 </div>
                                 <div className="flex items-center gap-3 mt-2 mb-5">
                                     <GrainMeter
@@ -296,10 +296,7 @@ export default function Scanner() {
                                     <div className="flex items-start gap-2 rounded-xl bg-rust-100 text-rust-500 px-4 py-3 text-sm mb-3">
                                         <AlertTriangle size={16} className="mt-0.5 shrink-0" />
                                         <span>
-                                            The model isn't very confident about this
-                                            one — the photo may be unclear, or it
-                                            might not be a rice leaf at all. Treat
-                                            this result as a rough guess.
+                                                {t("scanner.lowConfidence")}
                                         </span>
                                     </div>
                                 )}
@@ -309,7 +306,7 @@ export default function Scanner() {
                                 </div>
 
                                 <div className="font-mono text-xs uppercase tracking-wide text-ink-600 mb-2">
-                                    Full breakdown
+                                    {t("scanner.breakdown")}
                                 </div>
                                 <ul className="space-y-2">
                                     {result.probabilities.map((p, i) => (

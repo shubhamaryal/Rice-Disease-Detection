@@ -7,41 +7,76 @@ const GEOCODE_URL = "https://geocoding-api.open-meteo.com/v1/search";
 const REVERSE_GEOCODE_URL =
     "https://api.bigdatacloud.net/data/reverse-geocode-client";
 
-// WMO weather codes -> short label + a simple condition bucket used to
-// pick an icon and to drive the "good day to spray / harvest" advisory.
-export const WEATHER_CODES = {
-    0: { label: "Clear sky", bucket: "clear" },
-    1: { label: "Mostly clear", bucket: "clear" },
-    2: { label: "Partly cloudy", bucket: "cloud" },
-    3: { label: "Overcast", bucket: "cloud" },
-    45: { label: "Fog", bucket: "fog" },
-    48: { label: "Depositing rime fog", bucket: "fog" },
-    51: { label: "Light drizzle", bucket: "rain" },
-    53: { label: "Drizzle", bucket: "rain" },
-    55: { label: "Dense drizzle", bucket: "rain" },
-    56: { label: "Freezing drizzle", bucket: "rain" },
-    57: { label: "Freezing drizzle", bucket: "rain" },
-    61: { label: "Light rain", bucket: "rain" },
-    63: { label: "Rain", bucket: "rain" },
-    65: { label: "Heavy rain", bucket: "storm" },
-    66: { label: "Freezing rain", bucket: "rain" },
-    67: { label: "Freezing rain", bucket: "rain" },
-    71: { label: "Light snow", bucket: "snow" },
-    73: { label: "Snow", bucket: "snow" },
-    75: { label: "Heavy snow", bucket: "snow" },
-    77: { label: "Snow grains", bucket: "snow" },
-    80: { label: "Light showers", bucket: "rain" },
-    81: { label: "Showers", bucket: "rain" },
-    82: { label: "Violent showers", bucket: "storm" },
-    85: { label: "Snow showers", bucket: "snow" },
-    86: { label: "Snow showers", bucket: "snow" },
-    95: { label: "Thunderstorm", bucket: "storm" },
-    96: { label: "Thunderstorm, hail", bucket: "storm" },
-    99: { label: "Thunderstorm, hail", bucket: "storm" },
+const WEATHER_CODES = {
+    en: {
+        0: { label: "Clear sky", bucket: "clear" },
+        1: { label: "Mostly clear", bucket: "clear" },
+        2: { label: "Partly cloudy", bucket: "cloud" },
+        3: { label: "Overcast", bucket: "cloud" },
+        45: { label: "Fog", bucket: "fog" },
+        48: { label: "Depositing rime fog", bucket: "fog" },
+        51: { label: "Light drizzle", bucket: "rain" },
+        53: { label: "Drizzle", bucket: "rain" },
+        55: { label: "Dense drizzle", bucket: "rain" },
+        56: { label: "Freezing drizzle", bucket: "rain" },
+        57: { label: "Freezing drizzle", bucket: "rain" },
+        61: { label: "Light rain", bucket: "rain" },
+        63: { label: "Rain", bucket: "rain" },
+        65: { label: "Heavy rain", bucket: "storm" },
+        66: { label: "Freezing rain", bucket: "rain" },
+        67: { label: "Freezing rain", bucket: "rain" },
+        71: { label: "Light snow", bucket: "snow" },
+        73: { label: "Snow", bucket: "snow" },
+        75: { label: "Heavy snow", bucket: "snow" },
+        77: { label: "Snow grains", bucket: "snow" },
+        80: { label: "Light showers", bucket: "rain" },
+        81: { label: "Showers", bucket: "rain" },
+        82: { label: "Violent showers", bucket: "storm" },
+        85: { label: "Snow showers", bucket: "snow" },
+        86: { label: "Snow showers", bucket: "snow" },
+        95: { label: "Thunderstorm", bucket: "storm" },
+        96: { label: "Thunderstorm, hail", bucket: "storm" },
+        99: { label: "Thunderstorm, hail", bucket: "storm" },
+    },
+    ne: {
+        0: { label: "खुला आकाश", bucket: "clear" },
+        1: { label: "प्रायः खुला", bucket: "clear" },
+        2: { label: "आंशिक बादल", bucket: "cloud" },
+        3: { label: "पूरै बादल", bucket: "cloud" },
+        45: { label: "हुस्सु", bucket: "fog" },
+        48: { label: "हुस्सु जम्ने", bucket: "fog" },
+        51: { label: "हल्का झरी", bucket: "rain" },
+        53: { label: "झरी", bucket: "rain" },
+        55: { label: "घना झरी", bucket: "rain" },
+        56: { label: "जम्ने झरी", bucket: "rain" },
+        57: { label: "जम्ने झरी", bucket: "rain" },
+        61: { label: "हल्का वर्षा", bucket: "rain" },
+        63: { label: "वर्षा", bucket: "rain" },
+        65: { label: "धेरै वर्षा", bucket: "storm" },
+        66: { label: "जम्ने वर्षा", bucket: "rain" },
+        67: { label: "जम्ने वर्षा", bucket: "rain" },
+        71: { label: "हल्का हिमपात", bucket: "snow" },
+        73: { label: "हिमपात", bucket: "snow" },
+        75: { label: "धेरै हिमपात", bucket: "snow" },
+        77: { label: "हिउँका दाना", bucket: "snow" },
+        80: { label: "हल्का फुहार", bucket: "rain" },
+        81: { label: "फुहार", bucket: "rain" },
+        82: { label: "तीव्र फुहार", bucket: "storm" },
+        85: { label: "हिमपातका फुहार", bucket: "snow" },
+        86: { label: "हिमपातका फुहार", bucket: "snow" },
+        95: { label: "चट्याङसहितको आँधी", bucket: "storm" },
+        96: { label: "चट्याङ र असिना", bucket: "storm" },
+        99: { label: "चट्याङ र असिना", bucket: "storm" },
+    },
 };
 
-export function describeCode(code) {
-    return WEATHER_CODES[code] || { label: "Unknown", bucket: "cloud" };
+export function describeCode(code, language = "en") {
+    return (
+        WEATHER_CODES[language]?.[code] || WEATHER_CODES.en[code] || {
+            label: "Unknown",
+            bucket: "cloud",
+        }
+    );
 }
 
 export async function reverseGeocode(latitude, longitude) {

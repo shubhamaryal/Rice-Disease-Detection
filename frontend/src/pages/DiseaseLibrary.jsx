@@ -1,6 +1,7 @@
 import { useMemo, useState } from "react";
 import { ArrowLeft, Leaf, ShieldAlert } from "lucide-react";
 import { DISEASES, CATEGORIES } from "../data/diseases";
+import { useLanguage } from "../i18n";
 
 const RISK_TONE = {
     High: "bg-rust-100 text-rust-500",
@@ -39,13 +40,15 @@ function DiseaseCard({ disease, onSelect }) {
 }
 
 function DiseaseDetail({ disease, onBack }) {
+    const { t } = useLanguage();
+
     return (
         <div>
             <button
                 onClick={onBack}
                 className="inline-flex items-center gap-1.5 text-sm font-medium text-leaf-700 hover:text-leaf-900 mb-6 cursor-pointer translate-all"
             >
-                <ArrowLeft size={16} /> Back to library
+                <ArrowLeft size={16} /> {t("library.back")}
             </button>
 
             <div className="flex flex-wrap items-start justify-between gap-3 mb-2">
@@ -53,7 +56,7 @@ function DiseaseDetail({ disease, onBack }) {
                     <span
                         className={`text-[11px] font-semibold px-2 py-1 rounded-full ${RISK_TONE[disease.risk] || RISK_TONE.Moderate}`}
                     >
-                        {disease.risk} risk
+                        {t(`library.risk.${disease.risk}`)}
                     </span>
                     <h1 className="font-display font-semibold text-3xl sm:text-4xl text-leaf-900 mt-2">
                         {disease.name}
@@ -72,7 +75,7 @@ function DiseaseDetail({ disease, onBack }) {
                 <div className="bg-paper border border-paddy-200 rounded-2xl p-5">
                     <h3 className="font-semibold text-leaf-900 flex items-center gap-2 mb-3">
                         <ShieldAlert size={17} className="text-husk-500" />{" "}
-                        Symptoms to look for
+                        {t("library.symptoms")}
                     </h3>
                     <ul className="space-y-2 text-sm text-ink-600 list-disc list-inside">
                         {disease.symptoms.map((s) => (
@@ -83,8 +86,7 @@ function DiseaseDetail({ disease, onBack }) {
 
                 <div className="bg-paper border border-paddy-200 rounded-2xl p-5">
                     <h3 className="font-semibold text-leaf-900 flex items-center gap-2 mb-3">
-                        <Leaf size={17} className="text-leaf-500" /> Conditions
-                        that favor it
+                        <Leaf size={17} className="text-leaf-500" /> {t("library.conditions")}
                     </h3>
                     <ul className="space-y-2 text-sm text-ink-600 list-disc list-inside">
                         {disease.conditions.map((c) => (
@@ -96,7 +98,7 @@ function DiseaseDetail({ disease, onBack }) {
 
             <div className="bg-paper border border-paddy-200 rounded-2xl p-5 mt-5">
                 <h3 className="font-semibold text-leaf-900 mb-3">
-                    Field management
+                    {t("library.management")}
                 </h3>
                 <ul className="space-y-2 text-sm text-ink-600 list-disc list-inside">
                     {disease.management.map((m) => (
@@ -108,15 +110,15 @@ function DiseaseDetail({ disease, onBack }) {
             {disease.pesticides.length > 0 && (
                 <div className="bg-paper border border-paddy-200 rounded-2xl p-5 mt-5">
                     <h3 className="font-semibold text-leaf-900 mb-3">
-                        Pesticides &amp; treatments referenced
+                        {t("library.pesticides")}
                     </h3>
                     <div className="overflow-x-auto">
                         <table className="w-full text-sm">
                             <thead>
                                 <tr className="text-left font-mono text-[11px] uppercase tracking-wide text-ink-400 border-b border-paddy-200">
-                                    <th className="py-2 pr-4">Product</th>
-                                    <th className="py-2 pr-4">Type</th>
-                                    <th className="py-2">Note</th>
+                                    <th className="py-2 pr-4">{t("library.product")}</th>
+                                    <th className="py-2 pr-4">{t("library.type")}</th>
+                                    <th className="py-2">{t("library.note")}</th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -150,7 +152,7 @@ function DiseaseDetail({ disease, onBack }) {
             {disease.video && (
                 <div className="bg-paper border border-paddy-200 rounded-2xl p-5 mt-5">
                     <h3 className="font-semibold text-leaf-900 mb-3">
-                        Watch: {disease.video.title}
+                        {t("library.watch")}: {disease.video.title}
                     </h3>
                     <div className="aspect-video rounded-xl overflow-hidden bg-leaf-900">
                         <iframe
@@ -169,6 +171,7 @@ function DiseaseDetail({ disease, onBack }) {
 }
 
 export default function DiseaseLibrary() {
+    const { t } = useLanguage();
     const [category, setCategory] = useState("All");
     const [selected, setSelected] = useState(null);
 
@@ -195,15 +198,13 @@ export default function DiseaseLibrary() {
                 <>
                     <div className="mb-6">
                         <div className="font-mono text-xs tracking-[0.14em] uppercase text-leaf-600">
-                            Field Reference
+                                    {t("library.kicker")}
                         </div>
                         <h1 className="font-display font-semibold text-3xl sm:text-4xl text-leaf-900 mt-1">
-                            Disease Library
+                                    {t("library.title")}
                         </h1>
                         <p className="text-ink-600 mt-2 max-w-2xl">
-                            Symptoms, favorable conditions, treatment options
-                            and short videos for the conditions this model can
-                            recognize.
+                                    {t("library.description")}
                         </p>
                     </div>
 
@@ -218,7 +219,7 @@ export default function DiseaseLibrary() {
                                         : "bg-paddy-100 text-leaf-700 hover:bg-paddy-200"
                                 }`}
                             >
-                                {c}
+                                {t(`library.category.${c}`)}
                             </button>
                         ))}
                     </div>

@@ -1,13 +1,16 @@
 import { NavLink } from "react-router-dom";
 import { ScanLine, CloudSun, BookOpen } from "lucide-react";
-
-const NAV_ITEMS = [
-    { to: "/", label: "Scan", icon: ScanLine, end: true },
-    { to: "/weather", label: "Weather", icon: CloudSun },
-    { to: "/library", label: "Library", icon: BookOpen },
-];
+import { useLanguage } from "../i18n";
 
 export default function MobileNav() {
+    const { t } = useLanguage();
+
+    const NAV_ITEMS = [
+        { to: "/", label: t("nav.scan"), icon: ScanLine, end: true },
+        { to: "/weather", label: t("nav.weather"), icon: CloudSun },
+        { to: "/library", label: t("nav.library"), icon: BookOpen },
+    ];
+
     return (
         <nav className="md:hidden fixed bottom-0 inset-x-0 z-30 bg-leaf-700 border-t border-leaf-600 pb-[env(safe-area-inset-bottom)]">
             <div className="grid grid-cols-3">

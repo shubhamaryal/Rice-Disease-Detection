@@ -1,13 +1,16 @@
 import { NavLink } from "react-router-dom";
 import { Sprout, ScanLine, CloudSun, BookOpen } from "lucide-react";
-
-const NAV_ITEMS = [
-    { to: "/", label: "Scan a Leaf", icon: ScanLine, end: true },
-    { to: "/weather", label: "Weather", icon: CloudSun },
-    { to: "/library", label: "Disease Library", icon: BookOpen },
-];
+import { useLanguage } from "../i18n";
 
 export default function Sidebar() {
+    const { t } = useLanguage();
+
+    const NAV_ITEMS = [
+        { to: "/", label: t("nav.scan"), icon: ScanLine, end: true },
+        { to: "/weather", label: t("nav.weather"), icon: CloudSun },
+        { to: "/library", label: t("nav.library"), icon: BookOpen },
+    ];
+
     return (
         <aside className="hidden md:flex md:flex-col md:w-60 md:shrink-0 bg-leaf-700 text-paddy-50 min-h-screen sticky top-0">
             <div className="flex items-center gap-2.5 px-5 py-6">
@@ -16,7 +19,7 @@ export default function Sidebar() {
                 </div>
                 <div>
                     <div className="font-display font-semibold text-lg leading-none">
-                        Rice Disease Detection
+                        {t("appName")}
                     </div>
                 </div>
             </div>
